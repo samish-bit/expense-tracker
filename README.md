@@ -50,4 +50,4 @@ A personal finance web app to track income and expenses, built with Python and F
 
 ## Live Demo
 
-[View live app](https://YOUR-APP-NAME.onrender.com)
+[View live app](https://expense-tracker-54jl.onrender.com)
