@@ -2,7 +2,7 @@
 
 A personal finance web app to track income and expenses, built with Python and Flask.
 
-![Dashboard Screenshot](screenshot.png)
+![Dashboard Screenshot](Dashboard.png)
 
 ## Features
 
