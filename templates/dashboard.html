@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Summary cards -->
+<div class="cards">
+  <div class="card card-balance">
+    <p>Balance</p>
+    <h2>Rs. {{ "%.2f"|format(balance) }}</h2>
+  </div>
+  <div class="card card-income">
+    <p>Total Income</p>
+    <h2>Rs. {{ "%.2f"|format(total_income) }}</h2>
+  </div>
+  <div class="card card-expense">
+    <p>Total Expenses</p>
+    <h2>Rs. {{ "%.2f"|format(total_expense) }}</h2>
+  </div>
+</div>
+
+<!-- Chart + Add form side by side -->
+<div class="main-grid">
+
+  <!-- Donut chart -->
+  <div class="box">
+    <h3>Overview</h3>
+    {% if total_income == 0 and total_expense == 0 %}
+      <p class="empty-msg">No data yet. Add a transaction!</p>
+    {% else %}
+      <canvas id="summaryChart" height="220"></canvas>
+    {% endif %}
+  </div>
+
+  <!-- Add transaction form -->
+  <div class="box">
+    <h3>Add Transaction</h3>
+    <form method="POST" action="{{ url_for('add_transaction') }}">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select name="type" required>
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (Rs.)</label>
+          <input type="number" name="amount" step="0.01" min="0.01" placeholder="0.00" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category" required>
+            {% for cat in categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Note (optional)</label>
+        <input type="text" name="note" placeholder="e.g. Lunch at restaurant"/>
+      </div>
+      <button type="submit" class="btn btn-primary">Add Transaction</button>
+    </form>
+  </div>
+
+</div>
+
+<!-- Filter + Transaction list -->
+<div class="box">
+  <div class="list-header">
+    <h3>Transactions</h3>
+    <div class="filter-row">
+      <span>Filter:</span>
+      <a href="{{ url_for('dashboard', category='all') }}"
+         class="filter-btn {% if selected_category == 'all' %}active{% endif %}">All</a>
+      {% for cat in categories %}
+        <a href="{{ url_for('dashboard', category=cat) }}"
+           class="filter-btn {% if selected_category == cat %}active{% endif %}">{{ cat }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if transactions %}
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Category</th>
+        <th>Note</th>
+        <th>Amount</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.date.strftime('%b %d, %Y') }}</td>
+        <td><span class="badge badge-{{ t.type }}">{{ t.type }}</span></td>
+        <td>{{ t.category }}</td>
+        <td>{{ t.note or '—' }}</td>
+        <td class="amount {{ t.type }}">
+          {% if t.type == 'expense' %}-{% endif %}Rs. {{ "%.2f"|format(t.amount) }}
+        </td>
+        <td>
+          <a href="{{ url_for('delete_transaction', id=t.id) }}"
+             class="delete-btn"
+             onclick="return confirm('Delete this transaction?')">✕</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="empty-msg">No transactions found.</p>
+  {% endif %}
+</div>
+
+<!-- Chart script -->
+<script>
+  {% if total_income > 0 or total_expense > 0 %}
+  new Chart(document.getElementById('summaryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Income', 'Expenses'],
+      datasets: [{
+        data: [{{ total_income }}, {{ total_expense }}],
+        backgroundColor: ['#22c55e', '#ef4444'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      cutout: '65%'
+    }
+  });
+  {% endif %}
+</script>
+
+{% endblock %}
